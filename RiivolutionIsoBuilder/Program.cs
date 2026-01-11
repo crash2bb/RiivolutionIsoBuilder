@@ -1,14 +1,20 @@
 ﻿using ExtensionMethods;
-using Microsoft.WindowsAPICodePack.Dialogs;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.Xml;
-
+using Eto;
+using Application = Eto.Forms.Application;
+using DialogResult = Eto.Forms.DialogResult;
+using MessageBox = Eto.Forms.MessageBox;
+using MessageBoxButtons = Eto.Forms.MessageBoxButtons;
+using OpenFileDialog = Eto.Forms.OpenFileDialog;
+using SaveFileDialog = Eto.Forms.SaveFileDialog;
+using Eto.Forms;
 namespace RiivolutionIsoBuilder
 {
     class Program
@@ -27,6 +33,9 @@ namespace RiivolutionIsoBuilder
     {
         public void Main(string[] args)
         {
+            var platform = Platform.Detect;
+            new Application(platform);
+          var form = new Form();
             string ISOPath = "", xmlPath = "", outPath = "", singleChoice = "Ask", newTitleID = "", newGameName = "";
             bool isSilent = false, deleteISO = true, isThereDefinedPaths = false, skipAllDone = false;
             int ignoreLevel = 0;
@@ -126,34 +135,43 @@ namespace RiivolutionIsoBuilder
                 Console.WriteLine("Please select an ISO/WBFS file to patch.");
                 using (OpenFileDialog dialog = new OpenFileDialog())
                 {
-                    dialog.Filter = "Nintendo Wii ISO Rom File|*.iso|Nintendo Wii WBFS Rom File|*.wbfs|All files (*.*)|*.*";
-                    dialog.FilterIndex = 1;
-                    dialog.RestoreDirectory = true;
-                    if (dialog.ShowDialog() == DialogResult.OK)
+                   dialog.Filters.Add(new FileFilter("Nintendo Wii WBFS Rom File","*.wbfs"));
+                    dialog.Filters.Add(new FileFilter("Nintendo Wii ISO Rom File","*.iso"));
+                   dialog.Filters.Add(new FileFilter("All files (*.*)","*.*"));
+                    //dialog.FilterName = "Nintendo Wii ISO Rom File|*.iso|Nintendo Wii WBFS Rom File|*.wbfs|All files (*.*)|*.*";
+                    //dialog.CurrentFilterIndex = 1;
+                    //dialog.RestoreDirectory = true;
+                    if (dialog.ShowDialog(null) == DialogResult.Ok)
                     {
                         Console.WriteLine("Please select a Riivolution XML file.");
 
                         // Getting XML path
                         using (OpenFileDialog dialog2 = new OpenFileDialog())
                         {
-                            dialog2.Filter = "Riivolution Extensible Markup Language File|*.xml|All files (*.*)|*.*";
-                            dialog2.FilterIndex = 1;
-                            dialog2.RestoreDirectory = true;
-                            if (dialog2.ShowDialog() == DialogResult.OK)
+                            dialog2.Filters.Add(new FileFilter("Riivolution Extensible Markup Language File","*.xml"));
+                           
+                            //dialog2.Filter = "Riivolution Extensible Markup Language File|*.xml|All files (*.*)|*.*";
+                            //dialog2.RestoreDirectory = true;
+                            if (dialog2.ShowDialog(parent: null) == DialogResult.Ok)
                             {
                                 Console.WriteLine("Please choose where you want your patched rom file to be saved.");
 
                                 // Getting output ISO/WBFS path
                                 SaveFileDialog textDialog;
                                 textDialog = new SaveFileDialog();
-                                textDialog.Filter = "Nintendo Wii ISO Rom File|*.iso|Nintendo Wii WBFS Rom File|*.wbfs|All files (*.*)|*.*";
-                                textDialog.DefaultExt = "wbfs";
-                                if (textDialog.ShowDialog() == DialogResult.OK)
+                                textDialog.Filters.Add(new FileFilter("Nintendo Wii ISO Rom File",".*iso"));
+                                textDialog.Filters.Add(new FileFilter("Nintendo Wii WBFS Rom File","*.wbfs"));
+                                textDialog.Filters.Add(new FileFilter("All files (*.*)","*.*"));
+                                
+                                //textDialog.Filter = "Nintendo Wii ISO Rom File|*.iso|Nintendo Wii WBFS Rom File|*.wbfs|All files (*.*)|*.*";
+                                if (textDialog.ShowDialog(parent: null) == DialogResult.Ok)
                                 {
-                                    System.IO.Stream fileStream = textDialog.OpenFile();
+                                    string filePath = textDialog.FileName;
+                                    System.IO.Stream fileStream = System.IO.File.OpenWrite(filePath);
                                     System.IO.StreamWriter sw = new System.IO.StreamWriter(fileStream);
                                     outPath = ((FileStream)(sw.BaseStream)).Name;
                                     sw.Close();
+                                    fileStream.Close();
 
                                     doStuff(dialog.FileName, dialog2.FileName, outPath, singleChoice, newTitleID, newGameName, isSilent, deleteISO, ignoreLevel, skipAllDone);
                                 }
@@ -187,12 +205,13 @@ namespace RiivolutionIsoBuilder
 
         public void doStuff(string ISOPath, string xmlPath, string outPath, string singleChoice, string newTitleID, string newGameName, bool isSilent, bool deleteISO, int ignoreLevel, bool skipAllDone)
         {
+            string currentShell = Environment.GetEnvironmentVariable("SHELL");;
             Random random = new Random();
             const string chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-            string extDir = Path.GetDirectoryName(Application.ExecutablePath) + "\\" + Path.GetFileNameWithoutExtension(xmlPath) + "-" + new string(Enumerable.Repeat(chars, 6).Select(s => s[random.Next(s.Length)]).ToArray());
+            string extDir = Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory + "patchedRom/" + Path.GetFileNameWithoutExtension(xmlPath) + "-" + new string(Enumerable.Repeat(chars, 6).Select(s => s[random.Next(s.Length)]).ToArray()));
 
             disc = RiivoDisc.ParseString(xmlPath);
-            string rootPath = Path.GetFullPath(Path.Combine(xmlPath, @"..\..\"));
+            string rootPath = Path.GetFullPath(Path.Combine(xmlPath, @"../../"));
 
             List<byte> id = new List<byte>();
             List<byte> name = new List<byte>();
@@ -295,7 +314,7 @@ namespace RiivolutionIsoBuilder
                 ISOPath = "\"" + ISOPath + "\"";
             }
 
-            runCommand("tools\\wit.exe", "extract -s " + ISOPath + " -1 -n " + titleID + " . \"" + extDir + "\" --psel=DATA -ovv", isSilent);
+            runCommand("tools/wit", "extract -s " + ISOPath + " -1 -n " + titleID + " . \"" + extDir + "\" --psel=DATA -ovv", isSilent);
 
             Console.WriteLine("ISO Extracted.");
 
@@ -412,16 +431,16 @@ namespace RiivolutionIsoBuilder
                 }
             }
 
-            Dolpatcher dp = new Dolpatcher(extDir + "\\sys\\main.dol", isSilent);
+            Dolpatcher dp = new Dolpatcher(extDir + "/sys/main.dol", isSilent);
 
             System.Diagnostics.Process copy = new System.Diagnostics.Process();
-            copy.StartInfo.FileName = "cmd.exe";
+            copy.StartInfo.FileName = "/bin/zsh";
             copy.StartInfo.UseShellExecute = false;
             copy.StartInfo.RedirectStandardOutput = true;
-            copy.StartInfo.WorkingDirectory = Path.GetDirectoryName(Application.ExecutablePath);
+            copy.StartInfo.WorkingDirectory = Path.GetDirectoryName(EtoEnvironment.GetFolderPath(EtoSpecialFolder.EntryExecutable));
             foreach (Patch patch in patches)
             {
-                if (patch.root.StartsWith("\\"))
+                if (patch.root.StartsWith("/"))
                     patch.root = patch.root.Substring(1);
 
                 Console.WriteLine("Patching " + patch.id + "...");
@@ -432,26 +451,26 @@ namespace RiivolutionIsoBuilder
                 {
                     doStringTIDReplacements(ref filePatch.external);
 
-                    string file = rootPath + patch.root + "\\" + filePatch.external;
-                    string extPath = extDir + "\\files" + filePatch.disc;
+                    string file = rootPath + patch.root + "/" + filePatch.external;
+                    string extPath = extDir + "/files" + filePatch.disc;
                     //Console.WriteLine("Copying " + path + " to " + extPath);
 
                     if ((filePatch.disc == null || filePatch.disc == "") ? true : Directory.Exists(extPath)) // Avoid running useless copy commands for folders that doesn't exist AND don't have the "created" flag enabled (this is used for region-specific folders in NewerSMBW, for example)
                     {
                         if (filePatch.disc != "" && filePatch.disc != null)
                         {
-                            if (!isSilent) Console.WriteLine("Copying " + patch.root + "\\" + filePatch.external);
-
-                            copy.StartInfo.Arguments = "/C xcopy /b \"" + file + "\" \"" + extPath + "\"";
+                            if (!isSilent) Console.WriteLine("Copying " + patch.root + "/" + filePatch.external);
+                              
+                            copy.StartInfo.Arguments = "-c \"rsync -a --ignore-errors " + file + "\" \"" + extPath + "\"";
                         }
                         else if (Directory.Exists(file))
                         {
                             if (!isSilent) Console.WriteLine("Searching manually for file named " + Path.GetFileName(file));
-                            string foundFile = ProcessDirectory(extDir + "\\files\\", Path.GetFileName(file));
+                            string foundFile = ProcessDirectory(extDir + "/files/", Path.GetFileName(file));
                             if (foundFile != "")
                             {
                                 if (!isSilent) Console.WriteLine("Found file " + foundFile);
-                                copy.StartInfo.Arguments = "/C copy /b \"" + file + "\" \"" + foundFile + "\"";
+                                copy.StartInfo.Arguments = "-c  \"cp " + file +  " " + foundFile + "\"" + " || true";
 
                                 copy.Start();
                                 if (!isSilent) Console.WriteLine(copy.StandardOutput.ReadToEnd());
@@ -476,14 +495,14 @@ namespace RiivolutionIsoBuilder
                 {
                     doStringTIDReplacements(ref folderPatch.external);
 
-                    string path = rootPath + patch.root + "\\" + folderPatch.external;
-                    string extPath = extDir + "\\files" + ((folderPatch.disc == "root") ? "" : folderPatch.disc);
+                    string path = rootPath + patch.root + "/" + folderPatch.external;
+                    string extPath = extDir + "/files" + ((folderPatch.disc == "root") ? "" : folderPatch.disc);
                     //Console.WriteLine("Copying " + path + " to " + extPath);
 
                     if (folderPatch.create && !Directory.Exists(extPath))
                     {
                         if (!isSilent) Console.WriteLine("Creating directory " + extPath);
-                        runCommand("cmd.exe", "/C mkdir \"" + extPath + "\"", isSilent);
+                        runCommand(currentShell, "-c \"mkdir " + extPath + "\"", isSilent);
                     }
 
                     if ((folderPatch.disc == null || folderPatch.disc == "") ? true : Directory.Exists(extPath)) // Avoid running useless copy commands for folders that doesn't exist AND don't have the "created" flag enabled (this is used for region-specific folders in NewerSMBW, for example)
@@ -496,7 +515,7 @@ namespace RiivolutionIsoBuilder
                             {
                                 recursive = " /E";
                             }
-                            copy.StartInfo.Arguments = "/C xcopy \"" + path + "\" \"" + extPath + "\"" + recursive + " /C /I /Y";
+                            copy.StartInfo.Arguments = "-c \"rsync --ignore-errors " + path + " " + extPath + "\"" + recursive + " /C /I /Y";
                         }
                         else if (Directory.Exists(path))
                         {
@@ -504,11 +523,11 @@ namespace RiivolutionIsoBuilder
                             foreach (string file in Directory.GetFiles(path))
                             {
                                 if (!isSilent) Console.WriteLine("Searching for " + file);
-                                string foundFile = ProcessDirectory(extDir + "\\files\\", Path.GetFileName(file));
+                                string foundFile = ProcessDirectory(extDir + "/files/", Path.GetFileName(file));
                                 if (foundFile != "")
                                 {
                                     if (!isSilent) Console.WriteLine("Found file " + foundFile);
-                                    copy.StartInfo.Arguments = "/C copy /b \"" + file + "\" \"" + foundFile + "\"";
+                                    copy.StartInfo.Arguments = "-c \"cp " + file  +" "+ foundFile + "\"";
 
                                     copy.Start();
                                     if (!isSilent) Console.WriteLine(copy.StandardOutput.ReadToEnd());
@@ -544,7 +563,7 @@ namespace RiivolutionIsoBuilder
                     else
                     {
                         doStringTIDReplacements(ref memoryPatch.valueFile);
-                        string memFilePath = rootPath + patch.root + "\\" + memoryPatch.valueFile;
+                        string memFilePath = rootPath + patch.root + "/" + memoryPatch.valueFile;
                         if(System.IO.File.Exists(memFilePath))
                         {
                             if(!isSilent) Console.WriteLine("Binary file " + memoryPatch.valueFile + " found, patching...");
@@ -565,7 +584,7 @@ namespace RiivolutionIsoBuilder
                     MessageBox.Show("WARNING: This mod uses savegame patches, which can't be integrated into an ISO/WBFS.\r\n" +
                         "This isn't a problem for most mods, but by default the same save slot as the game you're modding will be used for the mod you're trying to build.\r\n" +
                         "THIS PROBLEM CAN BE AVOIDED BY CHANGING THE TITLEID OF YOUR MOD, SEE HELP PAGE (-h or --help) FOR MORE INFO\r\n\r\n" +
-                        "However, some mods use this kind of patch to have the default save file changed."/*" If this is your case, ask for support on discord at Asu-chan#2929"*/, "Memory Patches Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        "However, some mods use this kind of patch to have the default save file changed."/*" If this is your case, ask for support on discord at Asu-chan#2929"*/, "Memory Patches Warning", MessageBoxButtons.OK, MessageBoxType.Warning);
                 }
 
                 if (disc.badMemPatches)
@@ -573,14 +592,15 @@ namespace RiivolutionIsoBuilder
                     MessageBox.Show("WARNING: Due to some memory patches being applied under 0x80004000, your game may not work on USB Loaders.\r\n\r\n" +
                         "This does NOT necessarely mean that any error occured; If you play your patched rom on Dolphin Emulator you should be fine.\r\n\r\n" +
                         "A fix for this is planned, but it's no easy task so don't expect it to see the light of the day too quickly.\r\n\r\n" +
-                        "If you can, ask your mod's maker to put their code hacks in a different place.", "Memory Patches Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        "If you can, ask your mod's maker to put their code hacks in a different place.", "Memory Patches Warning", MessageBoxButtons.OK, MessageBoxType.Warning);
                 }
+                
             }
 
             dp.saveDol();
-
+            
             Console.WriteLine("Done patching, rebuilding...");
-
+            
             if (newTitleID != "")
             {
                 string oldtid = titleID;
@@ -611,18 +631,19 @@ namespace RiivolutionIsoBuilder
 
             Console.WriteLine("");
 
-            runCommand("tools\\wit.exe", "copy \"" + extDir + "\" \"" + outPath + "\" -ovv --disc-id=" + titleID + " --tt-id=" + gameID + " --name \"" + gameName + "\"", isSilent);
+            runCommand("tools/wit", "copy \"" + extDir + "\" \"" + outPath + "\" -ovv --disc-id=" + titleID + " --tt-id=" + gameID + " --name \"" + gameName + "\"", isSilent);
 
             if (deleteISO)
             {
                 if (!isSilent) { Console.WriteLine("Removing extracted patched rom directory..."); }
-                runCommand("cmd.exe", "/C rmdir \"" + extDir + "\" /s /q", isSilent);
+                runCommand(currentShell, "-c \"rm -rf " + extDir + "\"", isSilent);
+                
                 if (!isSilent) { Console.WriteLine("Removed sucessfully"); }
             }
 
             Console.WriteLine("All done!");
+            
 
-            if(!skipAllDone) Console.ReadLine();
         }
 
         // This part is from https://docs.microsoft.com/en-us/dotnet/api/system.io.directory.getfiles?view=net-5.0
@@ -685,17 +706,21 @@ namespace RiivolutionIsoBuilder
 
         public void runCommand(string executable, string arguments, bool isSilent)
         {
+            string workingDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            
             System.Diagnostics.Process command = new System.Diagnostics.Process();
             command.StartInfo.FileName = executable;
             command.StartInfo.Arguments = arguments;
             command.StartInfo.UseShellExecute = false;
             command.StartInfo.RedirectStandardOutput = true;
-            command.StartInfo.WorkingDirectory = Path.GetDirectoryName(Application.ExecutablePath);
+            command.StartInfo.WorkingDirectory = workingDirectory;
+            
             command.Start();
             while (!command.StandardOutput.EndOfStream && !isSilent)
             {
                 Console.WriteLine(command.StandardOutput.ReadLine());
             }
+            
             command.WaitForExit();
         }
     }

@@ -311,7 +311,7 @@ namespace RiivolutionIsoBuilder
                 if (patch.root == "")
                     patch.root = defaultRoot;
 
-                patch.root = patch.root.Replace("/", "\\");
+                patch.root = patch.root.Replace("/", "/");
 
                 //Console.WriteLine("Found " + patchNode.ChildNodes.Count + " nodes in " + patch.id);
                 if (patchNode.ChildNodes.Count < 1)
@@ -324,8 +324,8 @@ namespace RiivolutionIsoBuilder
                     {
                         File file = new File();
 
-                        file.disc = patchSubnode.Attributes["disc"].Value().Replace("/", "\\");
-                        file.external = patchSubnode.Attributes["external"].Value().Replace("/", "\\");
+                        file.disc = patchSubnode.Attributes["disc"].Value().Replace("/", "/");
+                        file.external = patchSubnode.Attributes["external"].Value().Replace("/", "/");
                         file.resize = patchSubnode.Attributes["resize"].Value().AsBool(file.resize);
                         file.create = patchSubnode.Attributes["create"].Value().AsBool(file.create);
                         file.offset = patchSubnode.Attributes["offset"].Value().AsUInt32(file.offset);
@@ -338,11 +338,11 @@ namespace RiivolutionIsoBuilder
                     {
                         Folder folder = new Folder();
 
-                        folder.disc = patchSubnode.Attributes["disc"].Value().Replace("/", "\\");
-                        if (folder.disc == "\\") folder.disc = "root";
-                        if (folder.disc.EndsWith("\\")) folder.disc = folder.disc.Substring(0, folder.disc.Length - 1);
-                        folder.external = patchSubnode.Attributes["external"].Value().Replace("/", "\\");
-                        if (folder.external.EndsWith("\\")) folder.external = folder.external.Substring(0, folder.external.Length - 1);
+                        folder.disc = patchSubnode.Attributes["disc"].Value().Replace("/", "/");
+                        if (folder.disc == "/") folder.disc = "root";
+                        if (folder.disc.EndsWith("/")) folder.disc = folder.disc.Substring(0, folder.disc.Length - 1);
+                        folder.external = patchSubnode.Attributes["external"].Value().Replace("/", "/");
+                        if (folder.external.EndsWith("/")) folder.external = folder.external.Substring(0, folder.external.Length - 1);
                         folder.resize = patchSubnode.Attributes["resize"].Value().AsBool(folder.resize);
                         folder.create = patchSubnode.Attributes["create"].Value().AsBool(folder.create);
                         folder.recursive = patchSubnode.Attributes["recursive"].Value().AsBool(folder.recursive);
@@ -354,7 +354,7 @@ namespace RiivolutionIsoBuilder
                     {
                         Savegame savegame = new Savegame();
 
-                        savegame.external = patchSubnode.Attributes["external"].Value().Replace("/", "\\");
+                        savegame.external = patchSubnode.Attributes["external"].Value().Replace("/", "/");
                         savegame.clone = patchSubnode.Attributes["clone"].Value().AsBool(savegame.clone);
 
                         disc.hasSaveGamePatches = true;

@@ -1,3 +1,0 @@
-/home/hatem/RiderProjects/RiivolutionIsoBuilder-main/RiivolutionIsoBuilder/bin/Release/net10.0-windows/linux-x64/publish/RiivolutionIsoBuilder.pdb
-/home/hatem/RiderProjects/RiivolutionIsoBuilder-main/RiivolutionIsoBuilder/bin/Release/net10.0-windows/linux-x64/publish/RiivolutionIsoBuilder.dll.config
-/home/hatem/RiderProjects/RiivolutionIsoBuilder-main/RiivolutionIsoBuilder/bin/Release/net10.0-windows/linux-x64/publish/RiivolutionIsoBuilder

@@ -1,0 +1,35 @@
+# Build outputs
+bin/
+obj/
+out/
+publish/
+dist/
+
+# Rider IDE files
+.idea/
+*.sln.iml
+
+# User-specific files
+*.user
+*.suo
+*.userprefs
+
+# NuGet packages (restored automatically)
+packages/
+.nuget/
+
+# Logs and temp files
+*.log
+*.tmp
+*~
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# local configuration
+appsettings.Development.json
+appsettings.Local.json
+*.env
+
+

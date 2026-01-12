@@ -1,5 +1,5 @@
 # Asu's Riivolution ISO Builder
-A tool to patch Nintendo Wii ISO files using Riivolution XML files.
+A tool to patch Nintendo Wii ISO files using Riivolution XML files on Linux.
 
 # Support
 Please do NOT send me messages for support. If a mod doesn't work, it likely won't even with all my will put into it.
@@ -7,11 +7,11 @@ Please do NOT send me messages for support. If a mod doesn't work, it likely won
 Mods that use code hacks are known to cause issues with USB Loaders, and on Dolphin if any Gecko code is enabled.
 
 # Usage
-RiivolutionIsoBuilder.exe \<ISO Path\> \<Riivolution XML file path\> \<Output ISO/WBFS path\> [options]
+./RiivolutionIsoBuilder \<ISO Path\> \<Riivolution XML file path\> \<Output ISO/WBFS path\> [options]
 
-RiivolutionIsoBuilder.exe [options]
+./RiivolutionIsoBuilder [options]
 
-RiivolutionIsoBuilder.exe
+./RiivolutionIsoBuilder
 
 (Note: In the 2nd and 3rd cases, you will be asked for the file paths.)
 

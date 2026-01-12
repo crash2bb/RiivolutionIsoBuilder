@@ -1,5 +1,5 @@
 # Asu's Riivolution ISO Builder
-A tool to patch Nintendo Wii ISO files using Riivolution XML files on Linux.
+A tool to patch Nintendo Wii ISO files using Riivolution XML files.
 
 # Support
 Please do NOT send me messages for support. If a mod doesn't work, it likely won't even with all my will put into it.

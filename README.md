@@ -7,11 +7,11 @@ Please do NOT send me messages for support. If a mod doesn't work, it likely won
 Mods that use code hacks are known to cause issues with USB Loaders, and on Dolphin if any Gecko code is enabled.
 
 # Usage
-./RiivolutionIsoBuilder \<ISO Path\> \<Riivolution XML file path\> \<Output ISO/WBFS path\> [options]
+RiivolutionIsoBuilder.exe \<ISO Path\> \<Riivolution XML file path\> \<Output ISO/WBFS path\> [options]
 
-./RiivolutionIsoBuilder [options]
+RiivolutionIsoBuilder.exe [options]
 
-./RiivolutionIsoBuilder
+RiivolutionIsoBuilder.exe
 
 (Note: In the 2nd and 3rd cases, you will be asked for the file paths.)
 
